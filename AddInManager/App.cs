@@ -6,6 +6,8 @@ using RevitAddinManager.Command;
 using RevitAddinManager.View;
 using System.Reflection;
 using Autodesk.Windows;
+using RevitAddinManager.Bridge;
+using RevitAddinManager.DevPane;
 using RevitAddinManager.Model;
 using RevitAddinManager.View.Control;
 using RevitAddinManager.ViewModel;
@@ -46,10 +48,13 @@ public class App : IExternalApplication
         {
             application.RegisterDockablePane(PaneId, PaneName, DockPanelProvider);
         }
+        DevPaneManager.Initialize(application);
+        BridgeServer.Start(application);
         return Result.Succeeded;
     }
     public Result OnShutdown(UIControlledApplication application)
     {
+        BridgeServer.Stop();
         return Result.Cancelled;
     }
     private static void CreateRibbonPanel(UIControlledApplication application)
@@ -63,6 +68,7 @@ public class App : IExternalApplication
         AddPushButton(pulldownButton, typeof(AddInManagerFaceless), "Add-In Manager(Manual Mode,Faceless)");
         AddPushButton(pulldownButton, typeof(AddInManagerReadOnly), "Add-In Manager(Read Only Mode)");
         AddPushButton(pulldownButton, typeof(DockableCommand), "Show/Hide Panel(Debug-Trace-Events)");
+        AddPushButton(pulldownButton, typeof(DevPaneCommand), "Dev Pane (Hot Reload)");
         AddPushButtonBipChecker(pulldownButton, typeof(BipCheckerCommand), "Bip Checker");
         AddPushButtonBipChecker(pulldownButton, typeof(CompareTwoEleCommand), "Compare\nTwo Element(Compact)");
         var tab = ComponentManager.Ribbon.FindTab("Modify");

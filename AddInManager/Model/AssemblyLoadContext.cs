@@ -12,14 +12,21 @@ class AssemblyLoadContext : System.Runtime.Loader.AssemblyLoadContext
     }
     private AssemblyDependencyResolver _resolver;
 
-    public AssemblyLoadContext(string pluginPath): base(name: "RevitAddinManager", isCollectible: true)
+    public AssemblyLoadContext(string pluginPath): this(pluginPath, isCollectible: true)
+    {
+    }
+
+    /// <summary>
+    /// Dev panes use a non-collectible context: WPF keeps references to loaded types, so unloading would not work anyway.
+    /// </summary>
+    public AssemblyLoadContext(string pluginPath, bool isCollectible): base(name: "RevitAddinManager", isCollectible: isCollectible)
     {
         _resolver = new AssemblyDependencyResolver(pluginPath);
     }
 
     protected override Assembly Load(AssemblyName assemblyName)
     {
-        string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
+        string assemblyPath = _resolver?.ResolveAssemblyToPath(assemblyName);
         if (assemblyPath != null)
         {
             if(assemblyPath.Contains("RevitAPI"))
@@ -35,7 +42,7 @@ class AssemblyLoadContext : System.Runtime.Loader.AssemblyLoadContext
 
     protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
     {
-        string libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
+        string libraryPath = _resolver?.ResolveUnmanagedDllToPath(unmanagedDllName);
         if (libraryPath != null)
         {
             return LoadUnmanagedDllFromPath(libraryPath);
