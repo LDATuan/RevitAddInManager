@@ -1,0 +1,70 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--  Surfaces  -->
+    <SolidColorBrush x:Key="WindowBackground" Color="#F4F5FA" />
+    <SolidColorBrush x:Key="WindowBorderBrush" Color="#D9DBE6" />
+    <SolidColorBrush x:Key="UserControlBackground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F7F8FC" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#E6E8F0" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#EDEEF4" />
+    <SolidColorBrush x:Key="SegmentBackgroundBrush" Color="#ECEDF4" />
+    <SolidColorBrush x:Key="SegmentSelectedBrush" Color="#FFFFFF" />
+
+    <!--  Text  -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#191B2A" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#646A80" />
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="#A9ADBD" />
+    <SolidColorBrush x:Key="TreeViewForeground" Color="#191B2A" />
+
+    <!--  Controls  -->
+    <SolidColorBrush x:Key="ControlFillBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ControlFillHoverBrush" Color="#F4F5FA" />
+    <SolidColorBrush x:Key="ControlFillPressedBrush" Color="#EAEBF3" />
+    <SolidColorBrush x:Key="ControlFillDisabledBrush" Color="#F6F7FA" />
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#DADCE6" />
+    <SolidColorBrush x:Key="ControlBorderHoverBrush" Color="#BFC2D1" />
+    <SolidColorBrush x:Key="SubtleHoverBrush" Color="#0D1E2050" />
+    <SolidColorBrush x:Key="SubtlePressedBrush" Color="#1A1E2050" />
+    <SolidColorBrush x:Key="SwitchOffBrush" Color="#C9CCDA" />
+
+    <!--  Accent (indigo)  -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#4F46E5" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#4338CA" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="#3730A3" />
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#EEEDFD" />
+    <SolidColorBrush x:Key="AccentSoftHoverBrush" Color="#E2E0FB" />
+    <SolidColorBrush x:Key="AccentSoftForegroundBrush" Color="#4338CA" />
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#5B5CF0" />
+        <GradientStop Offset="1" Color="#8B5CF6" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentGradientHoverBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#4F46E5" />
+        <GradientStop Offset="1" Color="#7C3AED" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="SelectionBrush" Color="#ECEBFD" />
+    <SolidColorBrush x:Key="SelectionInactiveBrush" Color="#F0F1F6" />
+    <SolidColorBrush x:Key="SelectionForegroundBrush" Color="#191B2A" />
+
+    <!--  Status  -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#FDECEC" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#9A5B00" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="#FFF5DD" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
+    <SolidColorBrush x:Key="CaptionCloseHoverBrush" Color="#E5484D" />
+    <SolidColorBrush x:Key="AssemblyIconBackground" Color="#EEEDFD" />
+    <SolidColorBrush x:Key="AssemblyIconForeground" Color="#4F46E5" />
+    <SolidColorBrush x:Key="CommandIconForeground" Color="#8A8FA6" />
+
+    <!--  ScrollBar  -->
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#C8CBD8" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#9EA3B8" />
+
+    <!--  Log  -->
+    <SolidColorBrush x:Key="LogDefaultBrush" Color="#191B2A" />
+
+    <Color x:Key="ShadowColor">#1E2050</Color>
+    <system:Double xmlns:system="clr-namespace:System;assembly=mscorlib" x:Key="ShadowOpacity">0.07</system:Double>
+</ResourceDictionary>

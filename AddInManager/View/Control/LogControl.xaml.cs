@@ -14,12 +14,17 @@ namespace RevitAddinManager.View.Control
     /// </summary>
     public partial class LogControl : UserControl
     {
+        /// <summary>The most recently created log control (the one new messages scroll into view).</summary>
+        public static LogControl Current { get; private set; }
+
         public LogControl()
         {
             InitializeComponent();
+            ThemManager.Apply(this);
+            ThemManager.ThemeChanged += () => ThemManager.Apply(this);
             LogControlViewModel viewModel = new LogControlViewModel();
             DataContext = viewModel;
-            App.FrmLogControl = this;
+            Current = this;
             this.Loaded += viewModel.LogFileWatcher;
             this.Unloaded += viewModel.UserControl_Unloaded;
 

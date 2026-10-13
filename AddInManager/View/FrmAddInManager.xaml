@@ -1,4 +1,4 @@
-﻿<Window
+<Window
     x:Class="RevitAddinManager.View.FrmAddInManager"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -11,27 +11,86 @@
     Title="Revit Add In Manager"
     Width="{model:SettingBinding AppWidth}"
     Height="{model:SettingBinding AppHeight}"
-    MinWidth="400"
-    MinHeight="400"
+    MinWidth="420"
+    MinHeight="460"
     d:DataContext="{d:DesignInstance viewModel:AddInManagerViewModel}"
-    d:DesignHeight="600"
-    d:DesignWidth="400"
+    d:DesignHeight="640"
+    d:DesignWidth="480"
     Closed="OnCloseApp"
     FocusManager.FocusedElement="{Binding ElementName=tbxSearch}"
     Icon="../Resources/dev.ico"
     Left="{model:SettingBinding AppLeft}"
     PreviewKeyDown="CloseFormEvent"
     SizeChanged="FrmSizeChanged"
+    controls:ModernWindow.TitleBarContent="{DynamicResource TitleBarButtons}"
+    Style="{DynamicResource ModernWindow}"
     Top="{model:SettingBinding AppTop}"
     mc:Ignorable="d">
     <Window.Resources>
         <ResourceDictionary>
-            <!--  Load this specific theme because the Aero theme for CheckBox has issues.  -->
+            <!--  Light palette + styles; ThemManager overlays the dark palette at runtime.  -->
             <ResourceDictionary.MergedDictionaries>
-                <!-- <ResourceDictionary Source="/RevitAddinManager;component\Themes\Styles/LightTheme.xaml" /> -->
-                <!-- <ResourceDictionary Source="/RevitAddinManager;component\Themes\Styles/DarkTheme.xaml" /> -->
-                <ResourceDictionary Source="/RevitAddinManager;component\Themes\Styles/Default.xaml" />
+                <ResourceDictionary Source="/RevitAddinManager;component/Themes/Styles/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!--
+                Tree row. Assemblies: badge + file name. Commands: class name only (the namespace is
+                implied by the assembly row; the full name is in the tooltip and still searchable).
+            -->
+            <HierarchicalDataTemplate x:Key="AddinItemTemplate" ItemsSource="{Binding Children, Mode=OneTime}">
+                <StackPanel Orientation="Horizontal" ToolTip="{Binding Name, Mode=OneTime}">
+                    <CheckBox
+                        VerticalAlignment="Center"
+                        Focusable="False"
+                        IsChecked="{Binding IsChecked}" />
+                    <Border
+                        x:Name="Badge"
+                        Width="22"
+                        Height="22"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AssemblyIconBackground}"
+                        CornerRadius="6">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource AssemblyIconForeground}"
+                            Style="{StaticResource Icon}"
+                            Text="&#xE7B8;" />
+                    </Border>
+                    <TextBlock
+                        x:Name="ItemName"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Text="{Binding Name, Mode=OneTime}" />
+                </StackPanel>
+                <HierarchicalDataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding Children.Count}" Value="0">
+                        <Setter TargetName="Badge" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="ItemName" Property="Margin" Value="10,0,0,0" />
+                        <Setter TargetName="ItemName" Property="FontWeight" Value="Normal" />
+                        <Setter TargetName="ItemName" Property="Text" Value="{Binding Name, Mode=OneTime, Converter={StaticResource ShortName}}" />
+                    </DataTrigger>
+                </HierarchicalDataTemplate.Triggers>
+            </HierarchicalDataTemplate>
+
+            <!--  Title bar buttons (rendered by the ModernWindow template)  -->
+            <StackPanel x:Key="TitleBarButtons" Orientation="Horizontal">
+                <Button
+                    Width="32"
+                    Height="32"
+                    Command="{Binding ChangeThemCommand}"
+                    Content="&#xE706;"
+                    Style="{StaticResource IconButton}"
+                    ToolTip="Toggle light / dark theme (Alt+T)" />
+                <Button
+                    Width="32"
+                    Height="32"
+                    Command="{Binding HelpCommand}"
+                    Content="&#xE897;"
+                    Style="{StaticResource IconButton}"
+                    ToolTip="Help (F1)" />
+            </StackPanel>
         </ResourceDictionary>
     </Window.Resources>
     <Window.InputBindings>
@@ -40,85 +99,119 @@
         <KeyBinding Command="{Binding HelpCommand}" Gesture="F1" />
         <KeyBinding Command="{Binding ChangeThemCommand}" Gesture="Alt+T" />
     </Window.InputBindings>
-    <Grid Background="{DynamicResource WindowBackground}">
+
+    <Grid Margin="14,4,14,14">
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
-            <RowDefinition />
-            <RowDefinition Height="30" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="50" />
-            </Grid.ColumnDefinitions>
+
+        <!--  Toolbar: find, load, remove; everything else lives in the overflow menu  -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Menu
+                Margin="2,0,0,0"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Right">
+                <MenuItem
+                    Width="38"
+                    Height="38"
+                    Padding="0"
+                    ToolTip="More: save, version scope, cache">
+                    <MenuItem.Header>
+                        <TextBlock
+                            FontSize="15"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Style="{StaticResource Icon}"
+                            Text="&#xE712;" />
+                    </MenuItem.Header>
+                    <MenuItem Command="{Binding SaveCommand}" Header="Save to Add-ins folder">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE74E;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding SaveCommandFolder}" Header="Save as...">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE792;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ExploreCommand}" Header="Open saved folder">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xED25;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem
+                        Header="Only this Revit version"
+                        IsCheckable="True"
+                        IsChecked="{Binding IsCurrentVersion, Mode=TwoWay}"
+                        ToolTip="Off: commands and applications are available for all Revit versions" />
+                    <MenuItem
+                        Header="Separate list per version"
+                        IsCheckable="True"
+                        IsChecked="{Binding IsSeparateVersion, Mode=TwoWay}"
+                        ToolTip="Keep separate loaded add-in lists for each Revit version" />
+                    <Separator />
+                    <MenuItem
+                        Command="{Binding ReloadCommand}"
+                        Header="Reload"
+                        InputGestureText="F5">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding ClearCommand}"
+                        Header="Clear cache"
+                        ToolTip="Remove cached copies in the temp folder (requires Revit to be closed)">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xEA99;" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+            <Button
+                Margin="2,0,0,0"
+                Command="{Binding RemoveCommand}"
+                Content="&#xE74D;"
+                DockPanel.Dock="Right"
+                Style="{StaticResource IconButton}"
+                ToolTip="Remove the selected command or application (Del)" />
+            <Button
+                MinHeight="38"
+                Margin="8,0,0,0"
+                Command="{Binding LoadCommand}"
+                DockPanel.Dock="Right"
+                Style="{StaticResource TonalButton}"
+                ToolTip="Load a DLL containing commands or applications">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" />
+                    <TextBlock Margin="8,0,0,0" Text="Load" />
+                </StackPanel>
+            </Button>
             <TextBox
                 x:Name="tbxSearch"
-                Grid.Row="0"
-                Height="25"
-                Margin="1,0,5,0"
-                VerticalAlignment="Center"
                 PreviewKeyDown="HandleTextboxKeyPress"
-                Text="{Binding SearchText, Mode=TwoWay, Delay=200, UpdateSourceTrigger=PropertyChanged}">
-                <TextBox.Resources>
-                    <VisualBrush
-                        x:Key="tbxText"
-                        AlignmentX="Left"
-                        AlignmentY="Center"
-                        Stretch="None"
-                        TileMode="None">
-                        <VisualBrush.Visual>
-                            <Grid Background="Transparent">
-                                <TextBlock
-                                    Margin="5,0"
-                                    Foreground="DimGray"
-                                    Text="Search..." />
-                            </Grid>
-                        </VisualBrush.Visual>
-                    </VisualBrush>
-                    <Style TargetType="{x:Type Border}">
-                        <Setter Property="CornerRadius" Value="3" />
-                    </Style>
-                </TextBox.Resources>
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                        <Setter Property="BorderBrush" Value="#FFAFAFAF" />
-                        <Setter Property="BorderThickness" Value="0.5" />
-                        <Setter Property="Background" Value="Transparent" />
-                        <Setter Property="Margin" Value="5,5,0,5" />
-                        <Style.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter Property="Background" Value="{StaticResource tbxText}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
-            <Button
-                Grid.Column="1"
-                Margin="1,1,2,1"
-                VerticalAlignment="Center"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Command="{Binding HelpCommand}"
-                Content="Help"
-                ToolTip="Help" />
-        </Grid>
+                Style="{StaticResource SearchTextBox}"
+                Tag="Search commands and apps..."
+                Text="{Binding SearchText, Mode=TwoWay, Delay=200, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
 
-        <Grid Grid.Row="1">
+        <!--  Content  -->
+        <ContentControl Grid.Row="1" Style="{StaticResource Card}">
             <TabControl x:Name="TabControl" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 <TabItem
                     x:Name="TabCommand"
-                    FontSize="14"
-                    Header="Load Command"
+                    Header="Commands"
                     IsSelected="{Binding IsTabCmdSelected}"
-                    PreviewKeyDown="HandleTreeViewCommandKeyPress">
+                    PreviewKeyDown="HandleTreeViewCommandKeyPress"
+                    ToolTip="External commands loaded from assemblies">
                     <control:ExtendedTreeView
                         x:Name="TreeViewCommand"
                         controls:EnableDragHelper.EnableDrag="True"
-                        FontSize="12"
+                        FontSize="13"
+                        ItemTemplate="{StaticResource AddinItemTemplate}"
                         ItemsSource="{Binding CommandItems, Mode=TwoWay}"
                         PreviewMouseWheel="TreeViewCommand_OnPreviewMouseWheel"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -126,25 +219,46 @@
                         Style="{DynamicResource {x:Type TreeView}}">
                         <TreeView.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Command="{Binding LoadCommand}" Header="Load" />
-                                <MenuItem Command="{Binding RemoveCommand}" Header="Remove" />
-                                <MenuItem Command="{Binding OpenLcAssemblyCommand}" Header="Open Location Assembly" />
-                                <MenuItem Command="{Binding OpenRefsAssemblyCommand}" Header="Assembly Info..." />
-                                <MenuItem Command="{Binding ExecuteAddinCommand}" Header="Run" />
-                                <MenuItem Command="{Binding ReloadCommand}" Header="Reload" />
+                                <MenuItem Command="{Binding ExecuteAddinCommand}" Header="Run">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Command="{Binding ReloadCommand}"
+                                    Header="Reload"
+                                    InputGestureText="F5">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Command="{Binding LoadCommand}" Header="Load...">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Command="{Binding RemoveCommand}"
+                                    Header="Remove"
+                                    InputGestureText="Del">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE74D;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Command="{Binding OpenLcAssemblyCommand}" Header="Open Assembly Location">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xED25;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Command="{Binding OpenRefsAssemblyCommand}" Header="Assembly Info...">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE946;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                             </ContextMenu>
                         </TreeView.ContextMenu>
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate DataType="viewModel:AddinModel" ItemsSource="{Binding Children, Mode=OneTime}">
-                                <StackPanel Orientation="Horizontal">
-                                    <CheckBox
-                                        VerticalAlignment="Center"
-                                        Focusable="False"
-                                        IsChecked="{Binding IsChecked}" />
-                                    <ContentPresenter Margin="2,0" Content="{Binding Name, Mode=OneTime}" />
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
                         <TreeView.ItemContainerStyle>
                             <Style BasedOn="{StaticResource TreeViewItemStyle}" TargetType="{x:Type TreeViewItem}">
                                 <Setter Property="control:MouseDoubleClick.CommandParameter" Value="{Binding}" />
@@ -157,250 +271,219 @@
                 <TabItem
                     x:Name="TabApp"
                     controls:EnableDragHelper.EnableDrag="True"
-                    FontSize="14"
-                    Header="Load App"
+                    Header="Apps"
                     IsSelected="{Binding IsTabAppSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    PreviewKeyDown="HandleTreeViewAppKeyPress">
-                    <Grid>
-                        <control:ExtendedTreeView
-                            x:Name="TreeViewApp"
-                            Grid.ColumnSpan="2"
-                            FontSize="12"
-                            ItemContainerStyle="{StaticResource TreeViewItemStyle}"
-                            ItemsSource="{Binding ApplicationItems, Mode=TwoWay}"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            SelectedItem_="{Binding SelectedAppItem, Mode=TwoWay}"
-                            Style="{DynamicResource {x:Type TreeView}}">
-                            <TreeView.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Command="{Binding OpenLcAssemblyApp}" Header="Open Location Assembly" />
-                                    <MenuItem Command="{Binding ExecuteAddinCommand}" Header="Run" />
-                                    <MenuItem Command="{Binding LoadCommand}" Header="Load" />
-                                    <MenuItem Command="{Binding RemoveCommand}" Header="Remove" />
-                                </ContextMenu>
-                            </TreeView.ContextMenu>
-                            <TreeView.ItemTemplate>
-                                <HierarchicalDataTemplate DataType="viewModel:AddinModel" ItemsSource="{Binding Children, Mode=OneTime}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox
-                                            VerticalAlignment="Center"
-                                            Focusable="False"
-                                            IsChecked="{Binding IsChecked}" />
-                                        <ContentPresenter Margin="2,0" Content="{Binding Name, Mode=OneTime}" />
-                                    </StackPanel>
-                                </HierarchicalDataTemplate>
-                            </TreeView.ItemTemplate>
-                        </control:ExtendedTreeView>
-                    </Grid>
+                    PreviewKeyDown="HandleTreeViewAppKeyPress"
+                    ToolTip="External applications loaded from assemblies">
+                    <control:ExtendedTreeView
+                        x:Name="TreeViewApp"
+                        FontSize="13"
+                        ItemContainerStyle="{StaticResource TreeViewItemStyle}"
+                        ItemTemplate="{StaticResource AddinItemTemplate}"
+                        ItemsSource="{Binding ApplicationItems, Mode=TwoWay}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        SelectedItem_="{Binding SelectedAppItem, Mode=TwoWay}"
+                        Style="{DynamicResource {x:Type TreeView}}">
+                        <TreeView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="{Binding ExecuteAddinCommand}" Header="Run">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Command="{Binding LoadCommand}" Header="Load...">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Command="{Binding RemoveCommand}"
+                                    Header="Remove"
+                                    InputGestureText="Del">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE74D;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Command="{Binding OpenLcAssemblyApp}" Header="Open Assembly Location">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xED25;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </TreeView.ContextMenu>
+                    </control:ExtendedTreeView>
                 </TabItem>
                 <TabItem
                     x:Name="tabStartUp"
-                    FontSize="14"
                     Header="Startup"
-                    IsEnabled="True"
-                    IsSelected="{Binding IsTabStartSelected}">
-                    <Grid>
-                        <DataGrid
-                            x:Name="DataGridStartup"
-                            AlternatingRowBackground="Transparent"
-                            AlternationCount="2"
-                            AutoGenerateColumns="False"
-                            CanUserAddRows="False"
-                            CanUserSortColumns="True"
-                            ClipboardCopyMode="IncludeHeader"
-                            ColumnWidth="*"
-                            FontSize="12"
-                            HeadersVisibility="Column"
-                            IsReadOnly="False"
-                            ItemsSource="{Binding AddInStartUps, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            SelectionMode="Extended"
-                            VerticalScrollBarVisibility="Auto">
-                            <DataGrid.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Command="{Binding OpenLocalAddinCommand}" Header="Open Location Addin" />
-                                    <MenuItem Command="{Binding EditAddinCommand}" Header="Edit Addin" />
-                                </ContextMenu>
-                            </DataGrid.ContextMenu>
-                            <DataGrid.Resources>
-                                <Style TargetType="{x:Type DataGridCell}">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-                                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                                        </Trigger>
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
-                                                <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=DataGrid}}" Value="False" />
-                                            </MultiDataTrigger.Conditions>
-                                            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-                                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
-                                        </MultiDataTrigger>
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
-                                                <Condition Binding="{Binding ContextMenu.IsOpen, RelativeSource={RelativeSource AncestorType=DataGrid}}" Value="True" />
-                                            </MultiDataTrigger.Conditions>
-                                            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-                                            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                                        </MultiDataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </DataGrid.Resources>
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Width="80" Header="State">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate DataType="model:RevitAddin">
-                                            <Button
-                                                Height="25"
-                                                HorizontalContentAlignment="Center"
-                                                VerticalContentAlignment="Center"
-                                                Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}, Path=DataContext.VisibleToggle}"
-                                                Content="{Binding State}"
-                                                FontSize="10"
-                                                IsEnabled="{Binding IsReadOnly}"
-                                                ToolTip="Toggle To Convert State" />
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn
-                                    Width="0.6*"
-                                    Binding="{Binding NameNotEx}"
-                                    Header="Name" />
-                                <DataGridTextColumn
-                                    Width="*"
-                                    Binding="{Binding FilePath}"
-                                    Header="Full Path" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
+                    IsSelected="{Binding IsTabStartSelected}"
+                    ToolTip="Add-ins registered to load when Revit starts">
+                    <DataGrid
+                        x:Name="DataGridStartup"
+                        Margin="0,4,0,0"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserSortColumns="True"
+                        ClipboardCopyMode="IncludeHeader"
+                        ColumnWidth="*"
+                        IsReadOnly="False"
+                        ItemsSource="{Binding AddInStartUps, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        SelectionMode="Extended"
+                        VerticalScrollBarVisibility="Auto">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="{Binding OpenLocalAddinCommand}" Header="Open Add-in Location">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xED25;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Command="{Binding EditAddinCommand}" Header="Edit .addin File">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE70F;" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="104" Header="STATE">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="model:RevitAddin">
+                                        <Button
+                                            MinHeight="26"
+                                            Padding="10,2"
+                                            HorizontalAlignment="Left"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}, Path=DataContext.VisibleToggle}"
+                                            Content="{Binding State}"
+                                            FontSize="11"
+                                            IsEnabled="{Binding IsReadOnly}"
+                                            Style="{StaticResource TonalButton}"
+                                            ToolTip="Toggle to enable / disable this add-in" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn
+                                Width="0.6*"
+                                Binding="{Binding NameNotEx}"
+                                Header="NAME">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding FilePath}"
+                                Header="FULL PATH">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                                        <Setter Property="ToolTip" Value="{Binding FilePath}" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </TabItem>
                 <TabItem
-                    Header="Listener"
+                    Header="Trace"
                     IsSelected="{Binding IsTabLogSelected}"
-                    ToolTip="Support Listen Event Trace, Debug,Revit Events">
-                    <control:LogControl x:Name="LogControl" DataContext="{x:Null}" />
+                    ToolTip="Listen to Trace, Debug and Revit events">
+                    <control:LogControl x:Name="LogControl" />
                 </TabItem>
             </TabControl>
-        </Grid>
-        <StackPanel Grid.Row="2">
-            <Button
-                Margin="1,3,1,0"
-                Command="{Binding ExecuteAddinCommand}"
-                Content="Run"
-                IsEnabled="{Binding IsCanRun, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                ToolTip="Execute Addin Selected" />
-        </StackPanel>
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition Width="85" />
-            </Grid.ColumnDefinitions>
-            <GroupBox Margin="1,0,1,1" Header="Vendor Description:">
-                <TextBox
-                    x:Name="TbxDescription"
-                    Width="Auto"
-                    Height="100"
-                    HorizontalContentAlignment="Left"
-                    VerticalContentAlignment="Top"
-                    LostKeyboardFocus="TbxDescription_OnLostKeyboardFocus"
-                    Opacity="80"
-                    Text="{Binding VendorDescription, Mode=Default, UpdateSourceTrigger=PropertyChanged}"
-                    TextWrapping="Wrap"
-                    ToolTip="Default Autodesk, www.autodesk.com" />
-            </GroupBox>
+        </ContentControl>
 
-            <DockPanel
-                Grid.Column="1"
-                Width="82"
-                Margin="1,0,1,1"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Dock="Bottom">
-                <Button
-                    Margin="1,0,2,0"
-                    Command="{Binding LoadCommand}"
-                    Content="Load"
-                    DockPanel.Dock="Top"
-                    ToolTip="Load A Dll Of Command Or Application To Run" />
-                <Button
-                    Margin="1,5,2,0"
-                    Command="{Binding RemoveCommand}"
-                    Content="Remove"
-                    DockPanel.Dock="Top"
-                    ToolTip="Remove A Command Or Application Loaded" />
-                <Button
-                    Margin="1,5,2,0"
-                    Command="{Binding ManagerCommand}"
-                    Content="Startup"
-                    DockPanel.Dock="Top"
-                    ToolTip="Manager List Add-in Loaded In Revit" />
-                <Button
-                    Margin="1,5,2,0"
-                    VerticalAlignment="Top"
-                    Command="{Binding ClearCommand}"
-                    Content="Clear"
-                    ToolTip="Remove Cache In Temp Folder(Require Tune Off Revit)" />
-            </DockPanel>
-        </Grid>
+        <!--  Primary action  -->
+        <Button
+            x:Name="RunButton"
+            Grid.Row="2"
+            Margin="0,12,0,0"
+            Command="{Binding ExecuteAddinCommand}"
+            IsEnabled="{Binding IsCanRun, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            Style="{StaticResource HeroButton}"
+            ToolTip="Run the selected add-in (Enter, or double-click it)">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="36"
+                    Height="36"
+                    CornerRadius="18"
+                    Style="{StaticResource OnAccentChip}">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="14"
+                        Style="{StaticResource Icon}"
+                        Text="&#xE768;" />
+                </Border>
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="12,0"
+                    VerticalAlignment="Center">
+                    <TextBlock Text="Run" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        FontWeight="Normal"
+                        Opacity="0.85"
+                        TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{Binding SelectedCommandItem.Name, Converter={StaticResource ShortName}}" />
+                                <Style.Triggers>
+                                    <!--  Nothing runnable selected: explain instead of showing a stale name.  -->
+                                    <DataTrigger Binding="{Binding IsEnabled, ElementName=RunButton}" Value="False">
+                                        <Setter Property="Text" Value="Select a command to run" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <Border
+                    Grid.Column="2"
+                    Padding="8,3"
+                    VerticalAlignment="Center"
+                    CornerRadius="6"
+                    Style="{StaticResource OnAccentChip}"
+                    Visibility="{Binding IsEnabled, ElementName=RunButton, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Text="Enter" />
+                </Border>
+            </Grid>
+        </Button>
 
-        <StackPanel
-            Grid.Row="4"
-            Grid.Column="0"
-            Orientation="Horizontal">
-            <RadioButton
-                Margin="5,0,5,0"
-                VerticalAlignment="Center"
-                Content="All Version"
-                IsEnabled="True"
-                ToolTip="Available Command or Application Addin For All Version" />
-            <RadioButton
-                Margin="5,0,5,0"
-                VerticalAlignment="Center"
-                Content="Current Version"
-                IsChecked="{Binding IsCurrentVersion}"
-                ToolTip="Only Available for Revit Version Current" />
-            <CheckBox
-                Margin="5,0,5,0"
-                VerticalAlignment="Center"
-                Content="Separate Version"
-                IsChecked="{Binding IsSeparateVersion}"
-                ToolTip="Keep separate loaded add-in lists for each Revit version" />
-            <Menu
-                Width="Auto"
-                Height="25"
-                Margin="0,0,2,0"
-                VerticalContentAlignment="Center"
-                BorderBrush="LightGray"
-                BorderThickness="1">
-                <MenuItem Header="Save Addin">
-                    <MenuItem
-                        VerticalContentAlignment="Center"
-                        Command="{Binding SaveCommand}"
-                        Header="Save"
-                        ToolTip="Save To Folder Addin" />
-                    <MenuItem
-                        VerticalContentAlignment="Center"
-                        Command="{Binding SaveCommandFolder}"
-                        Header="Save As...."
-                        ToolTip="Save To New Folder" />
-                </MenuItem>
-            </Menu>
-            <Button
-                Width="20"
-                Height="25"
-                Command="{Binding ExploreCommand}"
-                ToolTip="Open Explore Location External Command Saved">
-                <Button.Background>
-                    <ImageBrush
-                        AlignmentX="Center"
-                        AlignmentY="Bottom"
-                        ImageSource="../Resources/folder.png" />
-                </Button.Background>
-            </Button>
-        </StackPanel>
+        <!--  Rarely used: collapsed by default, with the current value as a preview  -->
+        <Expander Grid.Row="3" Margin="0,8,0,0">
+            <Expander.Header>
+                <DockPanel>
+                    <TextBlock Text="Vendor description" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        Foreground="{DynamicResource TextDisabledBrush}"
+                        Text="{Binding VendorDescription}"
+                        TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </Expander.Header>
+            <TextBox
+                x:Name="TbxDescription"
+                Height="60"
+                VerticalContentAlignment="Top"
+                LostKeyboardFocus="TbxDescription_OnLostKeyboardFocus"
+                Tag="Default: Autodesk, www.autodesk.com"
+                Text="{Binding VendorDescription, Mode=Default, UpdateSourceTrigger=PropertyChanged}"
+                TextWrapping="Wrap"
+                VerticalScrollBarVisibility="Auto" />
+        </Expander>
     </Grid>
 </Window>

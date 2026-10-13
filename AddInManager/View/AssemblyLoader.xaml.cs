@@ -20,6 +20,7 @@ public partial class AssemblyLoader : Window
     public AssemblyLoader(string assemName)
     {
         InitializeComponent();
+        Model.ThemManager.Apply(this);
         _assemName = assemName;
         tbxAssembly.Content = assemName;
     }
