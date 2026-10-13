@@ -175,13 +175,13 @@ public sealed class LogControlViewModel
         else if (message.CaseInsensitiveContains("Delete"))
             ListBoxLogMessageAdd(message, System.Windows.Media.Brushes.Gray);
         else if (message.CaseInsensitiveContains("Add"))
-            ListBoxLogMessageAdd(message, System.Windows.Media.Brushes.Blue);
+            ListBoxLogMessageAdd(message, System.Windows.Media.Brushes.DodgerBlue);
         else if (message.CaseInsensitiveContains("Error"))
             ListBoxLogMessageAdd(message, System.Windows.Media.Brushes.Red);
         else if (message.CaseInsensitiveContains("Warning"))
             ListBoxLogMessageAdd(message, System.Windows.Media.Brushes.OrangeRed);
         else
-            ListBoxLogMessageAdd(message, System.Windows.Media.Brushes.Black);
+            ListBoxLogMessageAdd(message, null);
     }
     private void ListBoxLogMessageAdd(string message, System.Windows.Media.Brush color)
     {
@@ -189,9 +189,9 @@ public sealed class LogControlViewModel
             DispatcherObject.Invoke(new DMessageAdd(ListBoxLogMessageAdd), DispatcherPriority.ApplicationIdle, message, color);
         else
         {
-            MessageList.Add(new LogMessageString(String.Format("{0} {1}", ++_counter, message), color, FontWeights.Normal, 14));
-            App.FrmLogControl.listBox_LogMessages.SelectedIndex = App.FrmLogControl.listBox_LogMessages.Items.Count - 1;
-            App.FrmLogControl.listBox_LogMessages.ScrollIntoView(App.FrmLogControl.listBox_LogMessages.SelectedItem);
+            MessageList.Add(new LogMessageString(String.Format("{0} {1}", ++_counter, message), color, FontWeights.Normal, 12));
+            LogControl.Current.listBox_LogMessages.SelectedIndex = LogControl.Current.listBox_LogMessages.Items.Count - 1;
+            LogControl.Current.listBox_LogMessages.ScrollIntoView(LogControl.Current.listBox_LogMessages.SelectedItem);
             if (MessageList.Count > MAX_MESSGAES)
                 MessageList.RemoveAt(0);
         }

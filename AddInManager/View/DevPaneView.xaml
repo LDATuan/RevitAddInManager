@@ -1,0 +1,111 @@
+<UserControl
+    x:Class="RevitAddinManager.View.DevPaneView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="White">
+    <!--
+        Only the chrome (toolbar + message banner) is themed. The developer's content in ContentHost
+        is deliberately outside the themed scope so it keeps the look it has in the developer's own add-in.
+    -->
+    <DockPanel>
+        <Border x:Name="Chrome" DockPanel.Dock="Top">
+            <Border.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="/RevitAddinManager;component/Themes/Styles/Default.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </Border.Resources>
+            <StackPanel
+                Background="{DynamicResource SurfaceAltBrush}"
+                TextElement.FontFamily="{DynamicResource UiFont}"
+                TextElement.FontSize="13"
+                TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
+                <Border
+                    Padding="12,6,8,6"
+                    BorderBrush="{DynamicResource DividerBrush}"
+                    BorderThickness="0,0,0,1">
+                    <DockPanel>
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Right"
+                            Orientation="Horizontal">
+                            <CheckBox
+                                x:Name="AutoReload"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                Content="Auto"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Style="{DynamicResource Switch}"
+                                ToolTip="Reload automatically whenever the .dll is rebuilt" />
+                            <Button
+                                x:Name="ReloadButton"
+                                Content="&#xE72C;"
+                                Style="{DynamicResource IconButton}"
+                                ToolTip="Reload the pane from its .dll" />
+                            <Button
+                                x:Name="LoadButton"
+                                Width="34"
+                                Height="34"
+                                Margin="4,0,0,0"
+                                MinHeight="0"
+                                Padding="0"
+                                Content="&#xE8E5;"
+                                FontFamily="{DynamicResource IconFont}"
+                                FontWeight="Normal"
+                                Style="{DynamicResource TonalButton}"
+                                ToolTip="Load… a .dll with an IDockablePaneProvider or UserControl" />
+                        </StackPanel>
+                        <Ellipse
+                            x:Name="StatusDot"
+                            Width="8"
+                            Height="8"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource TextDisabledBrush}" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock
+                                x:Name="TitleText"
+                                FontWeight="SemiBold"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                x:Name="CaptionText"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border
+                    x:Name="MessageBanner"
+                    Margin="8,8,8,8"
+                    Padding="10,8"
+                    CornerRadius="8"
+                    Visibility="Collapsed">
+                    <DockPanel>
+                        <TextBlock
+                            x:Name="MessageIcon"
+                            Margin="0,1,10,0"
+                            VerticalAlignment="Top"
+                            DockPanel.Dock="Left"
+                            Style="{DynamicResource Icon}" />
+                        <TextBox
+                            x:Name="MessageText"
+                            MinHeight="0"
+                            MaxHeight="300"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontFamily="{DynamicResource CodeFont}"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto" />
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+        <ContentControl x:Name="ContentHost" />
+    </DockPanel>
+</UserControl>

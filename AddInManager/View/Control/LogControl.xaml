@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="RevitAddinManager.View.Control.LogControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -11,29 +11,93 @@
     Background="{DynamicResource UserControlBackground}"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <!--  Replaced at runtime by ThemManager (Light / Dark).  -->
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/RevitAddinManager;component\Themes\Styles/LightTheme.xaml" />
+                <ResourceDictionary Source="/RevitAddinManager;component/Themes/Styles/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid x:Name="ctlList">
+    <Grid
+        x:Name="ctlList"
+        TextElement.FontFamily="{DynamicResource UiFont}"
+        TextElement.FontSize="13"
+        TextElement.Foreground="{DynamicResource TextPrimaryBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition />
-            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
+
+        <!--  Toolbar  -->
+        <Border
+            Padding="12,6,6,6"
+            BorderBrush="{DynamicResource DividerBrush}"
+            BorderThickness="0,0,0,1">
+            <DockPanel>
+                <Button
+                    Command="{Binding ClearLogCommand}"
+                    DockPanel.Dock="Right"
+                    Style="{DynamicResource SubtleButton}"
+                    ToolTip="Clear all listener results">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{DynamicResource Icon}" Text="&#xE74D;" />
+                        <TextBlock Margin="6,0,0,0" Text="Clear" />
+                    </StackPanel>
+                </Button>
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                    <Ellipse
+                        Width="8"
+                        Height="8"
+                        VerticalAlignment="Center"
+                        Fill="#22C55E"
+                        ToolTip="Listening" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Text="Trace output" />
+                    <Border
+                        Margin="8,0,0,0"
+                        Padding="7,1"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AccentSoftBrush}"
+                        CornerRadius="9">
+                        <TextBlock
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource AccentSoftForegroundBrush}"
+                            Text="{Binding MessageList.Count}" />
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
         <ListBox
             x:Name="listBox_LogMessages"
-            SelectionMode="Extended"
-            FontFamily="{Binding DisplayFontFamily}"
-            ItemsSource="{Binding MessageList}">
+            Grid.Row="1"
+            FontFamily="{DynamicResource CodeFont}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ItemsSource="{Binding MessageList}"
+            SelectionMode="Extended">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock
                         FontSize="{Binding FontSize}"
                         FontWeight="{Binding FontWeight}"
-                        Foreground="{Binding MessageColor}"
-                        Text="{Binding Message}" />
+                        Text="{Binding Message}"
+                        TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{Binding MessageColor}" />
+                                <Style.Triggers>
+                                    <!--  Messages without a specific color follow the theme.  -->
+                                    <DataTrigger Binding="{Binding MessageColor}" Value="{x:Null}">
+                                        <Setter Property="Foreground" Value="{DynamicResource LogDefaultBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </DataTemplate>
             </ListBox.ItemTemplate>
             <ListBox.CommandBindings>
@@ -45,6 +109,9 @@
             <ListBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Command="Copy">
+                        <MenuItem.Icon>
+                            <TextBlock Style="{DynamicResource Icon}" Text="&#xE8C8;" />
+                        </MenuItem.Icon>
                         <MenuItem.CommandBindings>
                             <CommandBinding
                                 CanExecute="RightClickCopyCmdCanExecute"
@@ -55,18 +122,46 @@
                 </ContextMenu>
             </ListBox.ContextMenu>
         </ListBox>
-        <DockPanel
+
+        <!--  Empty state  -->
+        <StackPanel
             Grid.Row="1"
-            Dock="Right"
-            LastChildFill="False">
-            <Button
-                Width="80"
-                Margin="2,0,5,0"
-                VerticalAlignment="Center"
-                Command="{Binding ClearLogCommand}"
-                Content="Clear"
-                DockPanel.Dock="Left"
-                ToolTip="Clear all result listener" />
-        </DockPanel>
+            MaxWidth="260"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsHitTestVisible="False">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding MessageList.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Border
+                Width="44"
+                Height="44"
+                Background="{DynamicResource AccentSoftBrush}"
+                CornerRadius="12">
+                <TextBlock
+                    FontSize="20"
+                    Foreground="{DynamicResource AccentSoftForegroundBrush}"
+                    Style="{DynamicResource Icon}"
+                    Text="&#xE9D9;" />
+            </Border>
+            <TextBlock
+                Margin="0,12,0,0"
+                HorizontalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="No trace output yet" />
+            <TextBlock
+                Margin="0,4,0,0"
+                Foreground="{DynamicResource TextSecondaryBrush}"
+                Text="Trace.WriteLine and Debug.WriteLine from your add-in, plus Revit events, show up here."
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+        </StackPanel>
     </Grid>
 </UserControl>

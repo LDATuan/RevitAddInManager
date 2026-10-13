@@ -103,6 +103,8 @@
     <Resource Include="Resources\dev.ico" />
     <Resource Include="Resources\dev.png" />
     <Resource Include="Resources\folder.png" />
+    <Resource Include="Resources\Fonts\*.ttf" />
+    <None Include="Resources\Fonts\*-LICENSE.txt" />
   </ItemGroup>
 
   <ItemGroup>
