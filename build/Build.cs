@@ -39,14 +39,8 @@ internal partial class Build : NukeBuild
 
     private List<string> GetConfigurations(params string[] startPatterns)
     {
-        var configurations = Solution.Configurations
-            .Select(pair => pair.Key)
+        var configurations = Solution.GetModel().BuildTypes
             .Where(s => startPatterns.Any(s.StartsWith))
-            .Select(s =>
-            {
-                var platformIndex = s.LastIndexOf('|');
-                return s.Remove(platformIndex);
-            })
             .ToList();
         if (configurations.Count == 0) throw new Exception($"Can't find configurations in the solution by patterns: {string.Join(" | ", startPatterns)}.");
         return configurations;

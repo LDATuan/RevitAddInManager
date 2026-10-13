@@ -15,5 +15,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
       - name: Run Nuke Build
         run: ./.nuke/build.cmd --GitHubToken ${{ secrets.GITHUB_TOKEN }}
