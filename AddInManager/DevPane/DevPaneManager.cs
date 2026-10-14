@@ -98,7 +98,7 @@ public static class DevPaneManager
         List<string> warnings;
         try
         {
-            loaded = CreatePane(assemblyPath, className, interactive, out warnings);
+            loaded = CreatePane(app, assemblyPath, className, interactive, out warnings);
             if (loaded == null) return new { slot = number, cancelled = true };
         }
         catch (Exception ex)
@@ -166,7 +166,7 @@ public static class DevPaneManager
         WakeRevit();
     }
 
-    private static LoadedPane CreatePane(string assemblyPath, string className, bool interactive, out List<string> warnings)
+    private static LoadedPane CreatePane(UIApplication app, string assemblyPath, string className, bool interactive, out List<string> warnings)
     {
         warnings = new List<string>();
         WaitUntilReadable(assemblyPath);
@@ -202,18 +202,29 @@ public static class DevPaneManager
 
         object provider = null;
         FrameworkElement content;
-        var instance = Activator.CreateInstance(type);
-        if (instance is IDockablePaneProvider paneProvider)
+        var activator = new PaneActivator(app, assembly, warnings);
+        try
         {
-            var data = new DockablePaneProviderData();
-            paneProvider.SetupDockablePane(data);
-            content = data.FrameworkElement ?? data.FrameworkElementCreator?.CreateFrameworkElement()
-                      ?? throw new InvalidOperationException($"{type.FullName}.SetupDockablePane did not set FrameworkElement.");
-            provider = paneProvider;
+            var instance = activator.Create(type);
+            if (instance is IDockablePaneProvider paneProvider)
+            {
+                var data = new DockablePaneProviderData();
+                paneProvider.SetupDockablePane(data);
+                content = data.FrameworkElement ?? data.FrameworkElementCreator?.CreateFrameworkElement()
+                          ?? throw new InvalidOperationException($"{type.FullName}.SetupDockablePane did not set FrameworkElement.");
+                provider = paneProvider;
+            }
+            else
+            {
+                content = (FrameworkElement)instance;
+            }
         }
-        else
+        catch
         {
-            content = (FrameworkElement)instance;
+            // The previous pane stays; this failed build must not keep reacting to Revit.
+            activator.DetachEvents();
+            release();
+            throw;
         }
 
         // A Page only accepts a Window or Frame as parent; Revit does the same wrapping for real panes.
@@ -229,7 +240,12 @@ public static class DevPaneManager
             LoadedAt = DateTime.Now,
             Provider = provider,
             Content = content,
-            ReleaseLoader = release,
+            // Unsubscribe what the add-in's composer attached, so the previous build stops reacting to Revit.
+            ReleaseLoader = () =>
+            {
+                activator.DetachEvents();
+                release();
+            },
         };
     }
 
@@ -266,11 +282,15 @@ public static class DevPaneManager
             types = ex.Types.Where(t => t != null).ToArray();
         }
 
-        var concrete = types.Where(t => t.IsPublic && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null).ToList();
-        var providers = concrete.Where(t => t.GetInterface(ProviderInterface) != null).ToList();
-        if (providers.Count > 0) return providers;
-        return concrete.Where(t => typeof(UserControl).IsAssignableFrom(t) || typeof(Page).IsAssignableFrom(t)).ToList();
+        // Constructors with parameters are fine: PaneActivator builds those the way the add-in does.
+        var concrete = types.Where(t => t.IsPublic && !t.IsAbstract && !t.ContainsGenericParameters && t.GetConstructors().Length > 0).ToList();
+        // Providers first: without a class name, a provider is what the add-in registers, so it is the pane to pick.
+        var providers = concrete.Where(IsProvider);
+        var views = concrete.Where(t => typeof(UserControl).IsAssignableFrom(t) || typeof(Page).IsAssignableFrom(t));
+        return providers.Concat(views).Distinct().ToList();
     }
+
+    private static bool IsProvider(Type type) => type.GetInterface(ProviderInterface) != null;
 
     private static Type ChooseType(List<Type> candidates, string className, bool interactive)
     {
@@ -279,11 +299,12 @@ public static class DevPaneManager
             return candidates.FirstOrDefault(t => t.FullName == className)
                    ?? candidates.FirstOrDefault(t => t.Name == className)
                    ?? throw new InvalidOperationException(
-                       $"'{className}' is not an IDockablePaneProvider/UserControl/Page with a public parameterless constructor. " +
+                       $"'{className}' is not a public IDockablePaneProvider, UserControl or Page. " +
                        $"Candidates: {string.Join(", ", candidates.Select(t => t.FullName))}");
         }
         if (candidates.Count == 0)
-            throw new InvalidOperationException("No IDockablePaneProvider, UserControl or Page with a public parameterless constructor found.");
+            throw new InvalidOperationException("No public IDockablePaneProvider, UserControl or Page found.");
+        if (candidates.Any(IsProvider)) candidates = candidates.Where(IsProvider).ToList();
         if (candidates.Count == 1) return candidates[0];
         if (!interactive)
             throw new InvalidOperationException($"className is required, candidates: {string.Join(", ", candidates.Select(t => t.FullName))}");

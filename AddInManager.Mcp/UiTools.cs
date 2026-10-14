@@ -30,7 +30,7 @@ public sealed class UiTools(RevitBridgeClient client)
         "Warnings report XAML that was resolved against an older build.")]
     public async Task<CallToolResult> ReloadPane(
         [Description("Absolute path to the add-in .dll containing the pane.")] string assemblyPath,
-        [Description("IDockablePaneProvider, UserControl or Page class. Optional when the .dll has only one.")] string? className = null,
+        [Description("IDockablePaneProvider, UserControl or Page class. Optional when the .dll has one IDockablePaneProvider (or, with no provider, one UserControl or Page). Constructors with parameters are supported: Dev Pane builds them the way the add-in does.")] string? className = null,
         [Description("Dev Pane slot 1-3.")] int slot = 1,
         [Description("Also reload automatically whenever the .dll is rebuilt.")] bool? autoReload = null,
         [Description(PidDescription)] int? pid = null,
