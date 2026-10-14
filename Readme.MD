@@ -106,6 +106,27 @@ The product will be expanded in the future in process to support mutiple platfor
 
 ---
 
+## 🔁 Dev Pane: hot-reload dockable panes
+
+Revit lets an add-in register a dockable pane only once per session, so changing a pane normally means restarting Revit. Add-in Manager registers three generic **Dev Panes** at startup and swaps your freshly built pane into them:
+
+1. Ribbon **Add-in Manager → Dev Pane (Hot Reload)**, or **Load…** in the pane, then pick your add-in .dll.
+2. Add-in Manager creates your `IDockablePaneProvider` (or `UserControl`/`Page`), calls `SetupDockablePane` and shows its content in *Dev Pane 1*. Your registration code stays as it is for production.
+3. Rebuild, then press **Reload**, or tick **Auto** to reload whenever the .dll changes. A load error is shown inside the pane and the previous content stays.
+
+Before each swap the old content gets `Unloaded` and `Dispose()` (provider, content or DataContext): unsubscribe from Revit events there.
+
+## 🤖 Use with AI agents (MCP, prototype)
+
+Add-in Manager exposes a local [MCP](https://modelcontextprotocol.io) server so AI coding agents (Claude Code, Cursor, Copilot…) can develop Revit add-ins without restarting Revit:
+
+- **Run and see what changed**: hot-load and run a command, get the added/modified/deleted elements with parameter diffs, Revit warnings, exceptions, Debug/Trace output and screenshots; dry-run it or undo it in one step.
+- **C# REPL for the Revit API**: compile and run snippets against the exact Revit API of the running Revit.
+- **Drive the add-in's own UI**: see, read and click WPF/WinForms dialogs and TaskDialogs, even while a modal dialog blocks Revit.
+- **Every Revit version at once**: check a .dll against the Revit 2019–2027 APIs (removed, changed, obsolete members down to the source line) and look up the real API instead of guessing.
+
+See [AddInManager.Mcp](AddInManager.Mcp/README.md).
+
 ## ⚙️ Installation
 
 Please follow last release at section [Release](https://github.com/chuongmep/RevitAddInManager/releases/latest)

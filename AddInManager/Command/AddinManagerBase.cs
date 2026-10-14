@@ -131,7 +131,7 @@ public sealed class AddinManagerBase
         return result;
     }
 
-    private static Assembly Load(AssemblyLoadContext assemblyLoadContext, string filePath)
+    internal static Assembly Load(AssemblyLoadContext assemblyLoadContext, string filePath)
     {
         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
